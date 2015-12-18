@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">imij-lib</string>
+
+    <string-array name="imij_array">
+        <item></item>
+    </string-array>
+</resources>

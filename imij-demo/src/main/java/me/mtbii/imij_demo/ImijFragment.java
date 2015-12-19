@@ -8,6 +8,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import me.mtbii.imij_lib.Imij;
 
@@ -40,10 +41,12 @@ public class ImijFragment extends Fragment {
             BitmapDrawable image = (BitmapDrawable) imageView.getDrawable();
 
             Bitmap bmp = image.getBitmap();
-            Bitmap bmpOut = bmp.copy(bmp.getConfig(), true);
+            Bitmap bmpOut = bmp.copy(Bitmap.Config.ARGB_8888, true);
 
             MainActivity activity = (MainActivity) getActivity();
             Imij imijContext = activity.getImijContext();
+
+            long start = System.currentTimeMillis();
 
             switch(i) {
                 case 1:
@@ -51,19 +54,21 @@ public class ImijFragment extends Fragment {
                     break;
 
                 case 2:
-                    imijContext.gaussianBlur(bmp, bmpOut, 3, 1.0f);
+                    imijContext.gaussianBlur(bmp, bmpOut, 15);
                     break;
 
                 case 3:
-                    imijContext.meanBlur(bmp, bmpOut, 3);
+                    imijContext.meanBlur(bmp, bmpOut, 15);
                     break;
 
                 case 4:
-                    imijContext.constantThreshold(bmp, bmpOut, 3, 127, 255);
+                    imijContext.grayscale(bmp, bmpOut);
+                    imijContext.constantThreshold(bmpOut, bmpOut, 127, 255);
                     break;
 
                 case 5:
-                    imijContext.adaptiveThreshold(bmp, bmpOut, 3, 255);
+                    imijContext.grayscale(bmp, bmpOut);
+                    imijContext.adaptiveThreshold(bmpOut, bmpOut, 15, 255);
                     break;
 
                 case 6:
@@ -71,9 +76,12 @@ public class ImijFragment extends Fragment {
                     break;
 
                 case 7:
-                    imijContext.edgeDetection(bmp, bmpOut, 10, 127);
+                    imijContext.grayscale(bmp, bmpOut);
+                    imijContext.sobel(bmpOut, bmpOut);
                     break;
             }
+
+            Toast.makeText(activity, "Run time: " + (System.currentTimeMillis() - start) + " ms", Toast.LENGTH_SHORT).show();
 
             imageView.setImageBitmap(bmpOut);
         }

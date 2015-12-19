@@ -15,7 +15,7 @@
         <item>Constant Threshold</item>
         <item>Adaptive Threshold</item>
         <item>Resize</item>
-        <item>Edge Detection</item>
+        <item>Sobel</item>
     </string-array>
 
     <string name="title_activity_settings">Settings</string>

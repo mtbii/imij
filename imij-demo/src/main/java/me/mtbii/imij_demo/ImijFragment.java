@@ -1,9 +1,12 @@
 package me.mtbii.imij_demo;
 
 import android.app.Fragment;
+import android.app.ProgressDialog;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,76 +21,110 @@ import me.mtbii.imij_lib.Imij;
 public class ImijFragment extends Fragment {
     public static final String ARG_IMIJ_NUMBER = "planet_number";
 
-    private ImageView imageView;
-
-//    public ImijFragment() {
-//        // Empty constructor required for fragment subclasses
-//    }
+    private boolean isProcessing;
+    private ProgressDialog progress;
+    private View mFragmentView;
+    private ImageView mImageView;
+    private String mImijFeatureTitle;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View rootView = inflater.inflate(R.layout.fragment_imij, container, false);
+        mFragmentView = inflater.inflate(R.layout.fragment_imij, container, false);
         int i = getArguments().getInt(ARG_IMIJ_NUMBER);
-        String imijFeature = getResources().getStringArray(R.array.imij_array)[i];
+        mImijFeatureTitle = getResources().getStringArray(R.array.imij_array)[i];
 
+        mImageView = (ImageView) mFragmentView.findViewById(R.id.image);
+        isProcessing = false;
+
+        process(i);
+        getActivity().setTitle(mImijFeatureTitle);
+
+        return mFragmentView;
+    }
+
+    private void process(final int filterNumber) {
         int imageId = getResources().getIdentifier("painting",
                 "drawable", getActivity().getPackageName());
 
-        imageView = (ImageView) rootView.findViewById(R.id.image);
-        imageView.setImageResource(imageId);
+        mImageView.setImageResource(imageId);
 
-        if(i > 0) {
-            BitmapDrawable image = (BitmapDrawable) imageView.getDrawable();
+        final MainActivity activity = (MainActivity) getActivity();
+        progress = activity.getProgressDialog();
 
-            Bitmap bmp = image.getBitmap();
-            Bitmap bmpOut = bmp.copy(Bitmap.Config.ARGB_8888, true);
+        if (filterNumber > 0) {
+            final BitmapDrawable image = (BitmapDrawable) mImageView.getDrawable();
+            final Imij imijContext = activity.getImijContext();
 
-            MainActivity activity = (MainActivity) getActivity();
-            Imij imijContext = activity.getImijContext();
+            final Bitmap bmp = image.getBitmap();
+            final Bitmap bmpOut = bmp.copy(Bitmap.Config.ARGB_8888, true);
+            final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
 
-            long start = System.currentTimeMillis();
 
-            switch(i) {
-                case 1:
-                    imijContext.grayscale(bmp, bmpOut);
-                    break;
+            new Thread(new Runnable() {
 
-                case 2:
-                    imijContext.gaussianBlur(bmp, bmpOut, 15);
-                    break;
+                @Override
+                public void run() {
+                    if (!isProcessing) {
+                        isProcessing = true;
+                        final long start = System.currentTimeMillis();
 
-                case 3:
-                    imijContext.meanBlur(bmp, bmpOut, 15);
-                    break;
+                        switch (filterNumber) {
+                            case 1:
+                                imijContext.grayscale(bmp, bmpOut);
+                                break;
 
-                case 4:
-                    imijContext.grayscale(bmp, bmpOut);
-                    imijContext.constantThreshold(bmpOut, bmpOut, 127, 255);
-                    break;
+                            case 2:
+                                imijContext.gaussianBlur(bmp, bmpOut, Integer.parseInt(prefs.getString(getString(R.string.pref_gaussianBlurRadius), "15")));
+                                break;
 
-                case 5:
-                    imijContext.grayscale(bmp, bmpOut);
-                    imijContext.adaptiveThreshold(bmpOut, bmpOut, 15, 255);
-                    break;
+                            case 3:
+                                imijContext.meanBlur(bmp, bmpOut, Integer.parseInt(prefs.getString(getString(R.string.pref_meanBlurRadius), "15")));
+                                break;
 
-                case 6:
-                    imijContext.resize(bmp, bmpOut, 100, 100);
-                    break;
+                            case 4:
+                                imijContext.grayscale(bmp, bmpOut);
+                                imijContext.constantThreshold(bmpOut, bmpOut, Integer.parseInt(prefs.getString(getString(R.string.pref_thresholdValue), "127")), 255);
+                                break;
 
-                case 7:
-                    imijContext.grayscale(bmp, bmpOut);
-                    imijContext.sobel(bmpOut, bmpOut);
-                    break;
-            }
+                            case 5:
+                                imijContext.grayscale(bmp, bmpOut);
+                                imijContext.adaptiveThreshold(bmpOut, bmpOut, Integer.parseInt(prefs.getString(getString(R.string.pref_adaptiveThresholdRadius), "15")), 255);
+                                break;
 
-            Toast.makeText(activity, "Run time: " + (System.currentTimeMillis() - start) + " ms", Toast.LENGTH_SHORT).show();
+                            case 6:
+                                int dim = Integer.parseInt(prefs.getString(getString(R.string.pref_resizeDimensions), "100"));
+                                imijContext.resize(bmp, bmpOut, dim, dim);
+                                break;
 
-            imageView.setImageBitmap(bmpOut);
+                            case 7:
+                                imijContext.grayscale(bmp, bmpOut);
+                                imijContext.sobel(bmpOut, bmpOut);
+                                break;
+                        }
+
+                        activity.runOnUiThread(new Runnable() {
+
+                            @Override
+                            public void run() {
+                                progress.dismiss();
+                                Toast.makeText(activity, "Run time: " + (System.currentTimeMillis() - start) + " ms", Toast.LENGTH_SHORT).show();
+                                mImageView.setImageBitmap(bmpOut);
+                                mFragmentView.invalidate();
+                                isProcessing = false;
+                            }
+                        });
+
+                    }
+                }
+            }).start();
+        } else {
+            progress.dismiss();
         }
+    }
 
-        getActivity().setTitle(imijFeature);
-
-        return rootView;
+    public void refresh() {
+        int i = getArguments().getInt(ARG_IMIJ_NUMBER);
+        process(i);
     }
 }

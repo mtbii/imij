@@ -1,9 +1,39 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
     <Preference
-        android:title="@string/about_title"
-        android:key="@string/about_key"
         android:defaultValue="0"
-        android:summary="@string/about_summary">
-    </Preference>
+        android:key="@string/about_key"
+        android:summary="@string/about_summary"
+        android:title="@string/about_title" />
+
+    <EditTextPreference
+        android:defaultValue="15"
+        android:inputType="number"
+        android:key="@string/pref_gaussianBlurRadius"
+        android:title="Gaussian Blur Radius" />
+
+    <EditTextPreference
+        android:defaultValue="15"
+        android:inputType="number"
+        android:key="@string/pref_meanBlurRadius"
+        android:title="Mean Blur Radius" />
+
+    <EditTextPreference
+        android:defaultValue="127"
+        android:inputType="number"
+        android:key="@string/pref_thresholdValue"
+        android:title="Threshold Value" />
+
+    <EditTextPreference
+        android:defaultValue="15"
+        android:inputType="number"
+        android:key="@string/pref_adaptiveThresholdRadius"
+        android:title="Adaptive Threshold Radius" />
+
+    <EditTextPreference
+        android:defaultValue="100"
+        android:inputType="number"
+        android:key="@string/pref_resizeDimensions"
+        android:title="Resize Dimensions" />
+
 </PreferenceScreen>

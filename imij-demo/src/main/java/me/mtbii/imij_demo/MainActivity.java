@@ -1,13 +1,14 @@
 package me.mtbii.imij_demo;
 
-import android.app.Fragment;
 import android.app.FragmentManager;
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.res.Configuration;
+import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -26,14 +27,18 @@ public class MainActivity extends AppCompatActivity {
     private int mCurrentPosition;
     private Imij mImij;
 
+    private ImijFragment mLastFragment;
     private DrawerLayout mDrawerLayout;
     private ListView mDrawerList;
     private ActionBarDrawerToggle mDrawerToggle;
+    private ProgressDialog mProgressDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
+
         mCurrentPosition = 0;
         mTitle = mDrawerTitle = getTitle();
         mImij = new Imij(this);
@@ -108,6 +113,12 @@ public class MainActivity extends AppCompatActivity {
                 openSettings();
                 break;
 
+            case R.id.action_refresh:
+                if (mLastFragment != null) {
+                    mLastFragment.refresh();
+                }
+                break;
+
             default: return true;
         }
 
@@ -132,18 +143,20 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void selectItem(int position) {
-        Fragment fragment = new ImijFragment();
+        String title = mImijFeatureTitles[position];
+        mProgressDialog = ProgressDialog.show(this, "Processing", title, true, false);
+        mLastFragment = new ImijFragment();
         Bundle args = new Bundle();
         args.putInt(ImijFragment.ARG_IMIJ_NUMBER, position);
-        fragment.setArguments(args);
+        mLastFragment.setArguments(args);
 
         FragmentManager fragmentManager = getFragmentManager();
         fragmentManager.beginTransaction()
-                .replace(R.id.content_frame, fragment)
+                .replace(R.id.content_frame, mLastFragment)
                 .commit();
 
         mDrawerList.setItemChecked(position, true);
-        setTitle(mImijFeatureTitles[position]);
+        setTitle(title);
         mDrawerLayout.closeDrawer(mDrawerList);
         mCurrentPosition = position;
     }
@@ -160,6 +173,10 @@ public class MainActivity extends AppCompatActivity {
 
     public Imij getImijContext(){
         return mImij;
+    }
+
+    public ProgressDialog getProgressDialog() {
+        return mProgressDialog;
     }
 
     public class DrawerItemClickListener implements ListView.OnItemClickListener {

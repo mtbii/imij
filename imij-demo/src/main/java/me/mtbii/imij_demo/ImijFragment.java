@@ -1,7 +1,6 @@
 package me.mtbii.imij_demo;
 
 import android.app.Fragment;
-import android.app.ProgressDialog;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
@@ -22,7 +21,7 @@ public class ImijFragment extends Fragment {
     public static final String ARG_IMIJ_NUMBER = "planet_number";
 
     private boolean isProcessing;
-    private ProgressDialog progress;
+    //private ProgressDialog progress;
     private View mFragmentView;
     private ImageView mImageView;
     private String mImijFeatureTitle;
@@ -48,9 +47,8 @@ public class ImijFragment extends Fragment {
                 "drawable", getActivity().getPackageName());
 
         mImageView.setImageResource(imageId);
-
         final MainActivity activity = (MainActivity) getActivity();
-        progress = activity.getProgressDialog();
+        activity.showProgressDialog(mImijFeatureTitle);
 
         if (filterNumber > 0) {
             final BitmapDrawable image = (BitmapDrawable) mImageView.getDrawable();
@@ -107,7 +105,7 @@ public class ImijFragment extends Fragment {
 
                             @Override
                             public void run() {
-                                progress.dismiss();
+                                activity.dismissProgressDialog();
                                 Toast.makeText(activity, "Run time: " + (System.currentTimeMillis() - start) + " ms", Toast.LENGTH_SHORT).show();
                                 mImageView.setImageBitmap(bmpOut);
                                 mFragmentView.invalidate();
@@ -119,7 +117,7 @@ public class ImijFragment extends Fragment {
                 }
             }).start();
         } else {
-            progress.dismiss();
+            activity.dismissProgressDialog();
         }
     }
 

@@ -32,6 +32,7 @@ public class MainActivity extends AppCompatActivity {
     private ListView mDrawerList;
     private ActionBarDrawerToggle mDrawerToggle;
     private ProgressDialog mProgressDialog;
+    private boolean mIsBusy;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -144,7 +145,7 @@ public class MainActivity extends AppCompatActivity {
 
     public void selectItem(int position) {
         String title = mImijFeatureTitles[position];
-        mProgressDialog = ProgressDialog.show(this, "Processing", title, true, false);
+        showProgressDialog(title);
         mLastFragment = new ImijFragment();
         Bundle args = new Bundle();
         args.putInt(ImijFragment.ARG_IMIJ_NUMBER, position);
@@ -177,6 +178,24 @@ public class MainActivity extends AppCompatActivity {
 
     public ProgressDialog getProgressDialog() {
         return mProgressDialog;
+    }
+
+    public boolean isShowingDialog() {
+        return mIsBusy;
+    }
+
+    public void showProgressDialog(String title) {
+        if (!mIsBusy) {
+            mProgressDialog = ProgressDialog.show(this, "Processing", title, true, false);
+            mIsBusy = true;
+        }
+    }
+
+    public void dismissProgressDialog() {
+        if (mProgressDialog != null) {
+            mProgressDialog.dismiss();
+            mIsBusy = false;
+        }
     }
 
     public class DrawerItemClickListener implements ListView.OnItemClickListener {

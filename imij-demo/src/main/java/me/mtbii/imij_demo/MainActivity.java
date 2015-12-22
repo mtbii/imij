@@ -176,14 +176,6 @@ public class MainActivity extends AppCompatActivity {
         return mImij;
     }
 
-    public ProgressDialog getProgressDialog() {
-        return mProgressDialog;
-    }
-
-    public boolean isShowingDialog() {
-        return mIsBusy;
-    }
-
     public void showProgressDialog(String title) {
         if (!mIsBusy) {
             mProgressDialog = ProgressDialog.show(this, "Processing", title, true, false);
